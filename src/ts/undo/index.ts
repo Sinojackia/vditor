@@ -1,4 +1,5 @@
-import DiffMatchPatch, {diff_match_patch, patch_obj} from "diff-match-patch";
+import  {diff_match_patch, patch_obj} from "diff-match-patch";
+// import  DiffMatchPatch  from "diff-match-patch";
 import {chartRender} from "../markdown/chartRender";
 import {mindmapRender} from "../markdown/mindmapRender";
 import {disableToolbar, enableToolbar, hidePanel} from "../toolbar/setToolbar";
