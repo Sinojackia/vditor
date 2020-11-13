@@ -1,4 +1,4 @@
-import DiffMatchPatch, {diff_match_patch, patch_obj} from "diff-match-patch";
+import  {diff_match_patch, patch_obj} from "diff-match-patch";
 import {chartRender} from "../markdown/chartRender";
 import {mindmapRender} from "../markdown/mindmapRender";
 import {disableToolbar, enableToolbar, hidePanel} from "../toolbar/setToolbar";
@@ -25,8 +25,7 @@ class Undo {
 
     constructor() {
         this.resetStack();
-        // @ts-ignore
-        this.dmp = new DiffMatchPatch();
+        this.dmp = new diff_match_patch();
     }
 
     public clearStack(vditor: IVditor) {
@@ -133,7 +132,7 @@ class Undo {
         }
     }
 
-    private renderDiff(state: patch_obj[], vditor: IVditor, isRedo: boolean = false) {
+    private renderDiff(state: patch_obj[], vditor: IVditor, isRedo = false) {
         let text;
         if (isRedo) {
             const redoPatchList = this.dmp.patch_deepCopy(state).reverse();

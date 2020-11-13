@@ -330,7 +330,7 @@ interface IMath {
     /** 内联数学公式起始 $ 后是否允许数字。默认值: false */
     inlineDigit?: boolean;
     /** 使用 MathJax 渲染时传入的宏定义。默认值: {} */
-    macros?: object;
+    macros?: any;
     /** 数学公式渲染引擎。默认值: 'KaTeX' */
     engine?: "KaTeX" | "MathJax";
 }

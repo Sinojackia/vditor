@@ -47,7 +47,7 @@ export const mindmapRender = (element: (HTMLElement | Document) = document, cdn 
                                     width: 1,
                                 },
                                 roam: true,
-                                symbol: (value: number, params: { data?: { children?: object } }) => {
+                                symbol: (value: number, params: { data?: { children?: any } }) => {
                                     if (params?.data?.children) {
                                         return "circle";
                                     } else {

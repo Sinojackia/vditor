@@ -24,7 +24,7 @@ class IR {
     public element: HTMLPreElement;
     public processTimeoutId: number;
     public hlToolbarTimeoutId: number;
-    public composingLock: boolean = false;
+    public composingLock = false;
     public preventInput: boolean;
 
     constructor(vditor: IVditor) {
@@ -148,7 +148,7 @@ class IR {
                         range.collapse(false);
                     } else {
                         this.element.insertAdjacentHTML("beforeend",
-                            `<p data-block="0">${Constants.ZWSP}<wbr></p>`);
+                            `<p data-block="0" placeholder="${vditor.options.placeholder}">${Constants.ZWSP}<wbr></p>`);
                         setRangeByWbr(this.element, range);
                     }
                 }

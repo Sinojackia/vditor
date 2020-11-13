@@ -807,7 +807,7 @@ export const fixTable = (vditor: IVditor, event: KeyboardEvent, range: Range) =>
             const previousCellElement = goPreviousCell(cellElement, range, false);
             if (!previousCellElement && tableElement) {
                 if (tableElement.textContent.trim() === "") {
-                    tableElement.outerHTML = `<p data-block="0"><wbr>\n</p>`;
+                    tableElement.outerHTML = "<p data-block=\"0\"><wbr>\n</p>";
                     setRangeByWbr(vditor[vditor.currentMode].element, range);
                 } else {
                     range.setStartBefore(tableElement);
@@ -1083,7 +1083,7 @@ export const fixTask = (vditor: IVditor, range: Range, event: KeyboardEvent) => 
                         const dataMarker = taskItemElement.parentElement.tagName === "OL" ? "" : ` data-marker="${taskItemElement.parentElement.getAttribute("data-marker")}"`;
                         let startAttribute = "";
                         if (beforeHTML) {
-                            startAttribute = taskItemElement.parentElement.tagName === "UL" ? "" : ` start="1"`;
+                            startAttribute = taskItemElement.parentElement.tagName === "UL" ? "" : " start=\"1\"";
                             beforeHTML = `<${parentTagName} data-tight="true"${dataMarker} data-block="0">${beforeHTML}</${parentTagName}>`;
                         }
                         // <p data-block="0">\n<wbr></p> => <p data-block="0"><wbr>\n</p>
@@ -1092,7 +1092,7 @@ export const fixTask = (vditor: IVditor, range: Range, event: KeyboardEvent) => 
  data-tight="true"${dataMarker} data-block="0"${startAttribute}>${afterHTML}</${parentTagName}>`;
                     } else {
                         // 任务列表下方无任务列表元素
-                        taskItemElement.parentElement.insertAdjacentHTML("afterend", `<p data-block="0"><wbr>\n</p>`);
+                        taskItemElement.parentElement.insertAdjacentHTML("afterend", "<p data-block=\"0\"><wbr>\n</p>");
                         if (taskItemElement.parentElement.querySelectorAll("li").length === 1) {
                             // 任务列表仅有一项时，使用 p 元素替换
                             taskItemElement.parentElement.remove();
@@ -1372,5 +1372,4 @@ export const paste = (vditor: IVditor, event: ClipboardEvent & { target: HTMLEle
             });
     }
     execAfterRender(vditor);
-    scrollCenter(vditor);
 };

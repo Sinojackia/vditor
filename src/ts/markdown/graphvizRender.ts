@@ -4,7 +4,7 @@ import {addScript} from "../util/addScript";
 declare class Viz {
     public renderSVGElement: (code: string) => Promise<any>;
 
-    constructor({}: { worker: Worker });
+    constructor(worker: Worker);
 }
 
 export const graphvizRender = (element: HTMLElement, cdn = Constants.CDN) => {
@@ -30,7 +30,7 @@ export const graphvizRender = (element: HTMLElement, cdn = Constants.CDN) => {
                 const url = window.URL || window.webkitURL;
                 const blobUrl = url.createObjectURL(blob);
                 const worker = new Worker(blobUrl);
-                new Viz({worker})
+                new Viz(worker)
                     .renderSVGElement(e.textContent).then((result: HTMLElement) => {
                     e.innerHTML = result.outerHTML;
                 }).catch((error) => {

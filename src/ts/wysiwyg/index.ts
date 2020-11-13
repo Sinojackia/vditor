@@ -43,9 +43,9 @@ class WYSIWYG {
         divElement.className = "vditor-wysiwyg";
 
         divElement.innerHTML = `<pre class="vditor-reset" placeholder="${vditor.options.placeholder}"
- contenteditable="true" spellcheck="false"></pre>
-<div class="vditor-panel vditor-panel--none"></div>
-<div class="vditor-panel vditor-panel--none">
+     contenteditable="true" spellcheck="false"></pre>
+    <div class="vditor-panel vditor-panel--none"></div>
+    <div class="vditor-panel vditor-panel--none">
     <button type="button" aria-label="${i18n[vditor.options.lang].comment}" class="vditor-icon vditor-tooltipped vditor-tooltipped__n">
         <svg><use xlink:href="#vditor-icon-comment"></use></svg>
     </button>
