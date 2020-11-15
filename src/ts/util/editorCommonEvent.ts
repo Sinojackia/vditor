@@ -152,7 +152,7 @@ export const hotkeyEvent = (vditor: IVditor, editorElement: HTMLElement) => {
         }
 
         // h1 - h6 hotkey
-        if (isCtrl(event) && event.altKey && !event.shiftKey && /^Digit[1-6]$/.test(event.code)) {
+        if (isCtrl(event) && !event.shiftKey && /^Digit[1-6]$/.test(event.code)) {
             if (vditor.currentMode === "wysiwyg") {
                 const tagName = event.code.replace("Digit", "H");
                 if (hasClosestByMatchTag(getSelection().getRangeAt(0).startContainer, tagName)) {

@@ -26,8 +26,7 @@ class Undo {
 
     constructor() {
         this.resetStack();
-        // @ts-ignore
-        this.dmp = new DiffMatchPatch();
+        this.dmp = new diff_match_patch();
     }
 
     public clearStack(vditor: IVditor) {
