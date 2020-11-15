@@ -112,6 +112,8 @@ declare class Lute {
 
     public static GetHeadingID(node: ILuteNode): string;
 
+    public static NewNodeID(): string;
+
     private constructor();
 
     public SetJSRenderers(options?: {
@@ -400,6 +402,8 @@ interface IPreviewActionCustom {
     text: string;
     /** 按钮 className 值 */
     className?: string;
+    /** 按钮提示信息 */
+    tooltip?: string;
     /** 点击回调 */
     click: (key: string) => void;
 }
@@ -504,6 +508,14 @@ interface IOptions {
         hide?: boolean,
         pin?: boolean,
     };
+    /** 评论 */
+    comment?: {
+        enable: boolean
+        add?(id: string, text: string, commentsData: ICommentsData[]): void
+        remove?(ids: string[]): void;
+        scroll?(top: number): void;
+        adjustTop?(commentsData: ICommentsData[]): void;
+    };
     /** 主题。默认值: 'classic' */
     theme?: "classic" | "dark";
     /** 图标。默认值: 'ant' */
@@ -606,11 +618,17 @@ interface IVditor {
     };
     wysiwyg?: {
         element: HTMLPreElement,
+        selectPopover: HTMLDivElement,
         popover: HTMLDivElement,
         afterRenderTimeoutId: number,
         hlToolbarTimeoutId: number,
         preventInput: boolean,
         composingLock: boolean,
+        commentIds: string[]
+        getComments(vditor: IVditor, getData?: boolean): ICommentsData[],
+        triggerRemoveComment(vditor: IVditor): void,
+        showComment(): void,
+        hideComment(): void,
     };
     ir?: {
         element: HTMLPreElement,
@@ -626,4 +644,9 @@ interface IVditor {
         composingLock: boolean,
         preventInput: boolean,
     };
+}
+
+interface ICommentsData {
+    id: string;
+    top: number;
 }

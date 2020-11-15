@@ -1,4 +1,5 @@
 import {Constants} from "../constants";
+import {i18n} from "../i18n";
 import {hidePanel} from "../toolbar/setToolbar";
 import {isCtrl, isFirefox} from "../util/compatibility";
 import {
@@ -17,6 +18,7 @@ import {
 } from "../util/hasClosest";
 import {hasClosestByHeadings} from "../util/hasClosestByHeadings";
 import {
+    getCursorPosition,
     getEditorRange,
     getSelectPosition,
     setRangeByWbr,
@@ -30,10 +32,12 @@ import {showCode} from "./showCode";
 class WYSIWYG {
     public element: HTMLPreElement;
     public popover: HTMLDivElement;
+    public selectPopover: HTMLDivElement;
     public afterRenderTimeoutId: number;
     public hlToolbarTimeoutId: number;
     public preventInput: boolean;
     public composingLock = false;
+    public commentIds: string[] = [];
 
     constructor(vditor: IVditor) {
         const divElement = document.createElement("div");
@@ -41,11 +45,16 @@ class WYSIWYG {
 
         divElement.innerHTML = `<pre class="vditor-reset" placeholder="${vditor.options.placeholder}"
  contenteditable="true" spellcheck="false"></pre>
-<div class="vditor-panel vditor-panel--none"></div>`;
+<div class="vditor-panel vditor-panel--none"></div>
+<div class="vditor-panel vditor-panel--none">
+    <button type="button" aria-label="${i18n[vditor.options.lang].comment}" class="vditor-icon vditor-tooltipped vditor-tooltipped__n">
+        <svg><use xlink:href="#vditor-icon-comment"></use></svg>
+    </button>
+</div>`;
 
         this.element = divElement.firstElementChild as HTMLPreElement;
-
-        this.popover = divElement.lastElementChild as HTMLDivElement;
+        this.popover = divElement.firstElementChild.nextElementSibling as HTMLDivElement;
+        this.selectPopover = divElement.lastElementChild as HTMLDivElement;
 
         this.bindEvent(vditor);
 
@@ -56,6 +65,82 @@ class WYSIWYG {
         dropEvent(vditor, this.element);
         copyEvent(vditor, this.element, this.copy);
         cutEvent(vditor, this.element, this.copy);
+
+        if (vditor.options.comment.enable) {
+            this.selectPopover.querySelector("button").onclick = () => {
+                const id = Lute.NewNodeID();
+                const range = getSelection().getRangeAt(0);
+                const contents = range.cloneContents();
+                range.deleteContents();
+                contents.childNodes.forEach((item: HTMLElement) => {
+                    if (item.nodeType === 3) {
+                        const commentElement = document.createElement("span");
+                        commentElement.classList.add("vditor-comment");
+                        commentElement.setAttribute("data-cmtids", id);
+                        item.parentNode.insertBefore(commentElement, item);
+                        commentElement.appendChild(item);
+                    } else if (item.classList.contains("vditor-comment")) {
+                        item.setAttribute("data-cmtids", item.getAttribute("data-cmtids") + " " + id);
+                    }
+                });
+                range.insertNode(contents);
+                vditor.options.comment.add(id, range.toString(), this.getComments(vditor, true));
+                afterRenderEvent(vditor, {
+                    enableAddUndoStack: true,
+                    enableHint: false,
+                    enableInput: false,
+                });
+                this.hideComment();
+            };
+        }
+    }
+
+    public getComments(vditor: IVditor, getData = false) {
+        if (vditor.currentMode === "wysiwyg" && vditor.options.comment.enable) {
+            this.commentIds = [];
+            this.element.querySelectorAll(".vditor-comment").forEach((item) => {
+                this.commentIds =
+                    this.commentIds.concat(item.getAttribute("data-cmtids").split(" "));
+            });
+            this.commentIds = Array.from(new Set(this.commentIds));
+
+            const comments: ICommentsData[] = [];
+            if (getData) {
+                this.commentIds.forEach((id) => {
+                    comments.push({
+                        id,
+                        top: (this.element.querySelector(`.vditor-comment[data-cmtids="${id}"]`) as HTMLElement).offsetTop,
+                    });
+                });
+                return comments;
+            }
+        } else {
+            return [];
+        }
+    }
+
+    public triggerRemoveComment(vditor: IVditor) {
+        const difference = (a: string[], b: string[]) => {
+            const s = new Set(b);
+            return a.filter((x) => !s.has(x));
+        };
+        if (vditor.currentMode === "wysiwyg" && vditor.options.comment.enable && vditor.wysiwyg.commentIds.length > 0) {
+            const oldIds = JSON.parse(JSON.stringify(this.commentIds));
+            this.getComments(vditor);
+            const removedIds = difference(oldIds, this.commentIds);
+            if (removedIds.length > 0) {
+                vditor.options.comment.remove(removedIds);
+            }
+        }
+    }
+
+    public showComment() {
+        const position = getCursorPosition(this.element);
+        this.selectPopover.setAttribute("style", `left:${position.left}px;display:block;top:${Math.max(-8, position.top - 21)}px`);
+    }
+
+    public hideComment() {
+        this.selectPopover.setAttribute("style", "display:none");
     }
 
     private copy(event: ClipboardEvent, vditor: IVditor) {
@@ -103,24 +188,39 @@ class WYSIWYG {
     private bindEvent(vditor: IVditor) {
         window.addEventListener("scroll", () => {
             hidePanel(vditor, ["hint"]);
-            if (this.popover.style.display !== "block") {
+            if (this.popover.style.display !== "block" || this.selectPopover.style.display !== "block") {
                 return;
             }
             const top = parseInt(this.popover.getAttribute("data-top"), 10);
             if (vditor.options.height !== "auto") {
                 if (vditor.options.toolbarConfig.pin && vditor.toolbar.element.getBoundingClientRect().top === 0) {
-                    this.popover.style.top = Math.max(window.scrollY - vditor.element.offsetTop - 8,
+                    const popoverTop = Math.max(window.scrollY - vditor.element.offsetTop - 8,
                         Math.min(top - vditor.wysiwyg.element.scrollTop, this.element.clientHeight - 21)) + "px";
+                    if (this.popover.style.display === "block") {
+                        this.popover.style.top = popoverTop;
+                    }
+                    if (this.selectPopover.style.display === "block") {
+                        this.selectPopover.style.top = popoverTop;
+                    }
                 }
                 return;
             } else if (!vditor.options.toolbarConfig.pin) {
                 return;
             }
-            this.popover.style.top = Math.max(top, (window.scrollY - vditor.element.offsetTop - 8)) + "px";
+            const popoverTop1 = Math.max(top, (window.scrollY - vditor.element.offsetTop - 8)) + "px";
+            if (this.popover.style.display === "block") {
+                this.popover.style.top = popoverTop1;
+            }
+            if (this.selectPopover.style.display === "block") {
+                this.selectPopover.style.top = popoverTop1;
+            }
         });
 
         this.element.addEventListener("scroll", () => {
             hidePanel(vditor, ["hint"]);
+            if (vditor.options.comment && vditor.options.comment.enable && vditor.options.comment.scroll) {
+                vditor.options.comment.scroll(vditor.wysiwyg.element.scrollTop);
+            }
             if (this.popover.style.display !== "block") {
                 return;
             }
@@ -129,7 +229,9 @@ class WYSIWYG {
             if (vditor.options.toolbarConfig.pin && vditor.toolbar.element.getBoundingClientRect().top === 0) {
                 max = window.scrollY - vditor.element.offsetTop + max;
             }
-            this.popover.style.top = Math.max(max, Math.min(top, this.element.clientHeight - 21)) + "px";
+            const topPx = Math.max(max, Math.min(top, this.element.clientHeight - 21)) + "px";
+            this.popover.style.top = topPx;
+            this.selectPopover.style.top = topPx;
         });
 
         this.element.addEventListener("paste", (event: ClipboardEvent & { target: HTMLElement }) => {

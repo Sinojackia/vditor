@@ -1199,7 +1199,11 @@ export const paste = (vditor: IVditor, event: ClipboardEvent & { target: HTMLEle
         Md2VditorIRDOM?: ILuteRender,
         Md2VditorSVDOM?: ILuteRender,
     } = {};
-    const renderLinkDest: ILuteRenderCallback = (node) => {
+    const renderLinkDest: ILuteRenderCallback = (node, entering) => {
+        if (!entering) {
+            return ["", Lute.WalkContinue];
+        }
+
         const src = node.TokensStr();
         if (node.__internal_object__.Parent.Type === 34 && src && src.indexOf("file://") === -1 &&
             vditor.options.upload.linkToImgUrl) {
@@ -1254,11 +1258,11 @@ export const paste = (vditor: IVditor, event: ClipboardEvent & { target: HTMLEle
             xhr.send(JSON.stringify({url: src}));
         }
         if (vditor.currentMode === "ir") {
-            return [`<span class="vditor-ir__marker vditor-ir__marker--link">${src}</span>`, Lute.WalkStop];
+            return [`<span class="vditor-ir__marker vditor-ir__marker--link">${src}</span>`, Lute.WalkContinue];
         } else if (vditor.currentMode === "wysiwyg") {
-            return ["", Lute.WalkStop];
+            return ["", Lute.WalkContinue];
         } else {
-            return [`<span class="vditor-sv__marker--link">${src}</span>`, Lute.WalkStop];
+            return [`<span class="vditor-sv__marker--link">${src}</span>`, Lute.WalkContinue];
         }
     };
 
@@ -1276,7 +1280,10 @@ export const paste = (vditor: IVditor, event: ClipboardEvent & { target: HTMLEle
         textHTML = doc.body.innerHTML;
     }
 
+    vditor.wysiwyg.getComments(vditor);
+
     // process code
+    const height = vditor[vditor.currentMode].element.scrollHeight;
     const code = processPasteCode(textHTML, textPlain, vditor.currentMode);
     const codeElement = vditor.currentMode === "sv" ?
         hasClosestByAttribute(event.target, "data-type", "code-block") :
@@ -1367,6 +1374,10 @@ export const paste = (vditor: IVditor, event: ClipboardEvent & { target: HTMLEle
                 processCodeRender(item, vditor);
             });
     }
+    vditor.wysiwyg.triggerRemoveComment(vditor);
     execAfterRender(vditor);
-    scrollCenter(vditor);
+    if (vditor[vditor.currentMode].element.scrollHeight - height >
+        vditor[vditor.currentMode].element.clientHeight / 2) {
+        scrollCenter(vditor);
+    }
 };

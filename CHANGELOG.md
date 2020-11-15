@@ -81,12 +81,18 @@
 * [open issues](https://github.com/Vanessa219/vditor/issues)
 * [346](https://github.com/Vanessa219/vditor/issues/346) 内容主题推荐（长期有效） `改进功能`
 
-### v3.6.1 / 2020-10-xx
+### v3.6.3 / 2020-11-xx
 
+* [812](https://github.com/Vanessa219/vditor/issues/812) 粘贴时减少抖动优化 `改进功能`
+
+### v3.6.2 / 2020-11-13
+
+* [810](https://github.com/Vanessa219/vditor/issues/810) 所见即所得模式划词评论功能改进 `修复缺陷`
+* [807](https://github.com/Vanessa219/vditor/issues/807) 脚注和链接引用改进 `改进功能`
+* [721](https://github.com/Vanessa219/vditor/issues/721) 所见即所得模式加入划词评论 `引入特性`
+* [808](https://github.com/Vanessa219/vditor/issues/808) options.preview.actions 添加的自定义 tooltip `改进功能`
 * [802](https://github.com/Vanessa219/vditor/issues/802) 粘贴后需滚动到粘贴内容的末尾 `改进功能`
-
-### v3.6.0 / 2020-10-27
-
+* [806](https://github.com/Vanessa219/vditor/pull/806) 修复201不算成功的问题  `改进功能`
 * [786](https://github.com/Vanessa219/vditor/issues/786) 数学公式块预览开关 `引入特性`
 * [800](https://github.com/Vanessa219/vditor/issues/800) WG 模式代码块预览开关问题 `修复缺陷`
 * [801](https://github.com/Vanessa219/vditor/issues/801) 编辑器拖拽问题 `修复缺陷`
@@ -95,6 +101,19 @@
 * [784](https://github.com/Vanessa219/vditor/issues/784) 从 WPS 粘贴时标题转 Markdown 优化 `改进功能`
 * [781](https://github.com/Vanessa219/vditor/issues/781) 增加 `linkPrefix` 用于强制对链接目标地址添加前缀 `引入特性`
 * [780](https://github.com/Vanessa219/vditor/pull/780) linkToImg支持自定义format `引入特性`
+* 文档修改
+  * 3.6.1 
+   * `options.preview.actions` 添加 `tooltip` 
+   * 添加 `options.comment` 及 `getCommentIds`, `hlCommentIds`, `unHlCommentIds`, `removeCommentIds` 方法
+     ```
+     comment?: {
+         enable: boolean
+         add?(id: string, text: string, commentsData: ICommentsData[]): void
+         remove?(ids: string[]): void;
+         scroll?(top: number): void;
+         adjustTop?(commentsData: ICommentsData[]): void;
+     };
+     ```
 
 ### v3.5.5 / 2020-10-12
 

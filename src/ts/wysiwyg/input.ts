@@ -48,6 +48,21 @@ export const input = (vditor: IVditor, range: Range, event?: InputEvent) => {
             item.removeAttribute("style");
         });
 
+        // 移除空评论
+        blockElement.querySelectorAll(".vditor-comment").forEach((item) => {
+            if (item.textContent.trim() === "") {
+                item.classList.remove("vditor-comment", "vditor-comment--focus");
+                item.removeAttribute("data-cmtids");
+            }
+        });
+        //  在有评论的行首换行后，该行的前一段会带有评论标识
+        blockElement.previousElementSibling?.querySelectorAll(".vditor-comment").forEach((item) => {
+            if (item.textContent.trim() === "") {
+                item.classList.remove("vditor-comment", "vditor-comment--focus");
+                item.removeAttribute("data-cmtids");
+            }
+        });
+
         let html = "";
         if (blockElement.getAttribute("data-type") === "link-ref-defs-block" || isToC(blockElement.innerText)) {
             // 修改链接引用或 ToC
@@ -94,17 +109,20 @@ export const input = (vditor: IVditor, range: Range, event?: InputEvent) => {
             }
 
             // 添加链接引用
-            const allLinkRefDefsElement = vditor.wysiwyg.element.querySelector("[data-type='link-ref-defs-block']");
-            if (allLinkRefDefsElement && !blockElement.isEqualNode(allLinkRefDefsElement)) {
-                html += allLinkRefDefsElement.outerHTML;
-                allLinkRefDefsElement.remove();
-            }
+            vditor.wysiwyg.element.querySelectorAll("[data-type='link-ref-defs-block']").forEach((item) => {
+                if (item && !(blockElement as HTMLElement).isEqualNode(item)) {
+                    html += item.outerHTML;
+                    item.remove();
+                }
+            });
+
             // 添加脚注
-            const allFootnoteElement = vditor.wysiwyg.element.querySelector("[data-type='footnotes-block']");
-            if (allFootnoteElement && !blockElement.isEqualNode(allFootnoteElement)) {
-                html += allFootnoteElement.outerHTML;
-                allFootnoteElement.remove();
-            }
+            vditor.wysiwyg.element.querySelectorAll("[data-type='footnotes-block']").forEach((item) => {
+                if (item && !(blockElement as HTMLElement).isEqualNode(item)) {
+                    html += item.outerHTML;
+                    item.remove();
+                }
+            });
         } else {
             html = blockElement.innerHTML;
         }
@@ -117,6 +135,7 @@ export const input = (vditor: IVditor, range: Range, event?: InputEvent) => {
         if (html === '<p data-block="0">```<wbr></p>' && vditor.hint.recentLanguage) {
             html = '<p data-block="0">```<wbr></p>'.replace("```", "```" + vditor.hint.recentLanguage);
         }
+
         log("SpinVditorDOM", html, "argument", vditor.options.debugger);
         html = vditor.lute.SpinVditorDOM(html);
         log("SpinVditorDOM", html, "result", vditor.options.debugger);
@@ -125,15 +144,6 @@ export const input = (vditor: IVditor, range: Range, event?: InputEvent) => {
             blockElement.innerHTML = html;
         } else {
             blockElement.outerHTML = html;
-            const allLinkRefDefsElement = vditor.wysiwyg.element.querySelector("[data-type='link-ref-defs-block']");
-            if (allLinkRefDefsElement) {
-                vditor.wysiwyg.element.insertAdjacentElement("beforeend", allLinkRefDefsElement);
-            }
-
-            const allFootnoteElement = vditor.wysiwyg.element.querySelector("[data-type='footnotes-block']");
-            if (allFootnoteElement) {
-                vditor.wysiwyg.element.insertAdjacentElement("beforeend", allFootnoteElement);
-            }
 
             if (footnoteElement) {
                 // 更新正文中的 tip
@@ -148,6 +158,35 @@ export const input = (vditor: IVditor, range: Range, event?: InputEvent) => {
             }
         }
 
+        let firstLinkRefDefElement: Element;
+        const allLinkRefDefsElement = vditor.wysiwyg.element.querySelectorAll("[data-type='link-ref-defs-block']");
+        allLinkRefDefsElement.forEach((item, index) => {
+            if (index === 0) {
+                firstLinkRefDefElement = item;
+            } else {
+                firstLinkRefDefElement.insertAdjacentHTML("beforeend", item.innerHTML);
+                item.remove();
+            }
+        });
+        if (allLinkRefDefsElement.length > 0) {
+            vditor.wysiwyg.element.insertAdjacentElement("beforeend", allLinkRefDefsElement[0]);
+        }
+
+        // 脚注合并后添加的末尾
+        let firstFootnoteElement: Element;
+        const allFootnoteElement = vditor.wysiwyg.element.querySelectorAll("[data-type='footnotes-block']");
+        allFootnoteElement.forEach((item, index) => {
+            if (index === 0) {
+                firstFootnoteElement = item;
+            } else {
+                firstFootnoteElement.insertAdjacentHTML("beforeend", item.innerHTML);
+                item.remove();
+            }
+        });
+        if (allFootnoteElement.length > 0) {
+            vditor.wysiwyg.element.insertAdjacentElement("beforeend", allFootnoteElement[0]);
+        }
+
         if (hasClosestByHeadings(blockElement) || html.startsWith("<h") || event?.inputType === "deleteContentBackward"
             || event?.inputType === "deleteContentForward") {
             renderToc(vditor);
@@ -160,6 +199,12 @@ export const input = (vditor: IVditor, range: Range, event?: InputEvent) => {
             .forEach((item: HTMLElement) => {
                 processCodeRender(item, vditor);
             });
+
+        if (event && (event.inputType === "deleteContentBackward" || event.inputType === "deleteContentForward") &&
+            vditor.options.comment.enable) {
+            vditor.wysiwyg.triggerRemoveComment(vditor);
+            vditor.options.comment.adjustTop(vditor.wysiwyg.getComments(vditor, true));
+        }
     }
 
     afterRenderEvent(vditor, {
